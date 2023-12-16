@@ -27,31 +27,49 @@ Goflix est une API en Go inspirée par Netflix, conçue pour fournir des fonctio
 ## Endpoints
 
 -**Gestion des utilisateurs :**
+   
     - POST /users : Créer un nouvel utilisateur.
+   
     - GET /users/{userID} : Récupérer les informations d'un utilisateur spécifique.
+  
     - PUT /users/{userID} : Mettre à jour les informations d'un utilisateur.
+   
     - DELETE /users/{userID} : Supprimer un utilisateur.
 
 -**Catalogue de contenu :**
+    
     - GET /movies : Récupérer la liste des films disponibles.
+    
     - GET /series : Récupérer la liste des séries disponibles.
+    
     - GET /movies/{movieID} : Obtenir les détails d'un film spécifique.
+    
     - POST /movies : Ajouter un nouveau film au catalogue.
+    
     - DELETE /movies/{movieID} : Supprimer un film du catalogue.
 
 -**Système de recommandations :**
+    
     - GET /recommendations/{userID} : Obtenir des recommandations pour un utilisateur spécifique.
+    
     - POST /ratings : Ajouter une évaluation d'utilisateur pour un film ou une série.
+    
     - GET /ratings/{userID} : Obtenir les évaluations d'un utilisateur spécifique.
 
 -**Recherche avancée :**
+    
     - GET /search?query={term} : Rechercher du contenu en fonction d'un terme spécifique.
+    
     - GET /search?genre={genreName} : Rechercher du contenu par genre.
+    
     - GET /search?actor={actorName} : Rechercher du contenu par acteur.
 
 -**Gestion des favoris :**
+    
     - POST /users/{userID}/favorites : Ajouter un élément aux favoris d'un utilisateur.
+    
     - GET /users/{userID}/favorites : Obtenir la liste des éléments favoris d'un utilisateur.
+    
     - DELETE /users/{userID}/favorites/{favoriteID} : Supprimer un élément des favoris d'un utilisateur.
 
 
