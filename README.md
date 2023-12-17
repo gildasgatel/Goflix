@@ -29,6 +29,8 @@ Goflix est une API en Go inspirée par Netflix, conçue pour fournir des fonctio
 -**Gestion des utilisateurs :**
    
     - POST /users : Créer un nouvel utilisateur.
+
+    - POST /login : S'identifer et récupérer le token.
    
     - GET /users/{userID} : Récupérer les informations d'un utilisateur spécifique.
   

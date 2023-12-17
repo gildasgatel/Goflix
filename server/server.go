@@ -1,8 +1,8 @@
 package server
 
 import (
-	"fmt"
 	"goflix/db"
+	"goflix/middleware"
 	"goflix/models"
 	"net/http"
 	"strconv"
@@ -35,13 +35,14 @@ func (s *Serve) Run() {
 func (s *Serve) routes() {
 
 	s.router.GET("/", s.handelHello)
-
+	s.router.POST("/login", s.handelLogin)
 	s.router.POST("/users", s.handelSaveUsers)
+
+	s.router.Use(middleware.JwtMiddleware())
+
 	s.router.GET("/users/:userID", s.handelGetUsers)
 	s.router.DELETE("/users/:userID", s.handelDeleteUsers)
 	s.router.PUT("/users/:userID", s.handelUpdateUsers)
-
-	s.router.POST("/getid", s.handelGetId)
 
 }
 
@@ -97,14 +98,20 @@ func (s *Serve) handelUpdateUsers(c *gin.Context) {
 
 }
 
-func (s *Serve) handelGetId(c *gin.Context) {
+func (s *Serve) handelLogin(c *gin.Context) {
 	if user := s.decodeUserJSON(c); user != nil {
 		err := s.db.GetID(user)
 		if err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("user id: %d", user.Id)})
+		token, err := middleware.GenerateToken(user.Id)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		} else {
+			c.JSON(http.StatusOK, gin.H{"token": token})
+		}
 	}
 
 }
