@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"strings"
 
 	"goflix/config"
 	"goflix/models"
@@ -128,19 +127,26 @@ func (db *DbSqlite) GetID(user *models.User) error {
 }
 
 func (db *DbSqlite) UpdateUser(user *models.User) error {
-	updateSQL := "UPDATE users SET user =? AND pswd=? AND account=? AND name=? AND firstname=? AND mail=? AND cell=? AND adress=? WHERE id = ?"
-	_, err := db.sqlite.Exec(updateSQL,
-		user.User,
-		strings.TrimSpace(user.Pswd),
-		user.Account,
-		user.Info.Name,
-		user.Info.Firstname,
-		user.Info.Mail,
-		user.Info.Cell,
-		user.Info.Adress,
-		user.Id)
+	hashPswd, err := utils.HashPasswd([]byte(user.Pswd))
 	if err != nil {
 		return err
+	}
+	updateSQL := "UPDATE users SET user = ? , pswd = ? , account = ? , name = ? , firstname = ? , mail = ? , cell = ? , adress = ? WHERE id = ?"
+	res, err := db.sqlite.Exec(updateSQL,
+		&user.User,
+		&hashPswd,
+		&user.Account,
+		&user.Info.Name,
+		&user.Info.Firstname,
+		&user.Info.Mail,
+		&user.Info.Cell,
+		&user.Info.Adress,
+		&user.Id)
+	if err != nil {
+		return err
+	}
+	if n, err := res.RowsAffected(); n < 1 || err != nil {
+		return fmt.Errorf("update failed with id: %d", user.Id)
 	}
 
 	return nil

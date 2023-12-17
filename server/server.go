@@ -41,7 +41,7 @@ func (s *Serve) routes() {
 	s.router.DELETE("/users/:userID", s.handelDeleteUsers)
 	s.router.PUT("/users/:userID", s.handelUpdateUsers)
 
-	s.router.POST("/login", s.handelGetId)
+	s.router.POST("/getid", s.handelGetId)
 
 }
 

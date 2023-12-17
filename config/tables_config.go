@@ -3,7 +3,7 @@ package config
 const CREATE_TABLE_USERS = `
 		CREATE TABLE IF NOT EXISTS users (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			user TEXT,
+			user TEXT UNIQUE,
 			pswd TEXT,
 			account TEXT,
 			name TEXT,
