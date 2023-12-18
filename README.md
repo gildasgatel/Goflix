@@ -2,12 +2,12 @@
 
 Goflix est une API en Go inspirée par Netflix, conçue pour fournir des fonctionnalités similaires dans le contexte du streaming de vidéos et de contenu multimédia.
 
+![This is an image](https://github.com/gildasgatel/Goflix/blob/master/goflix.jpg)
+
 ## Fonctionnalités
 
 - **Gestion des utilisateurs :** Création de comptes, authentification, gestion des profils.
 - **Catalogue de contenu :** Ajout, suppression et gestion du contenu multimédia (films, séries, documentaires, etc.).
-- **Système de recommandations :** Algorithmes pour recommander du contenu basé sur les préférences de l'utilisateur.
-- **Système de recherche avancée :** Recherche par genres, acteurs, titres, etc.
 - **Gestion des favoris :** Permet aux utilisateurs de sauvegarder leurs contenus préférés.
 
 ## Installation
