@@ -1,11 +1,13 @@
 package server
 
 import (
+	"fmt"
 	"goflix/db"
 	"goflix/middleware"
 	"goflix/models"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -49,13 +51,12 @@ func (s *Serve) routes() {
 	s.router.GET("/movies", s.handelGetListMovies)
 	s.router.GET("/movies/:movieID", s.handelGetmovie)
 
-	s.router.GET("/recommendations/:userID", s.handelSaveRatingsUsers) //todo
 	s.router.POST("/ratings", s.handelSaveRatingsUsers)
 	s.router.GET("/ratings/:userID", s.handelGetRatingsUsers)
 
-	s.router.POST("/users/:userID/favorites", s.handelSaveFavoriteUsers)
-	s.router.GET("/users/:userID/favorites", s.handelGetFavoriteUsers)
-	s.router.DELETE("/users/:userID/favorites/:favoriteID", s.handelGetRatingsUsers) //todo
+	s.router.POST("//favorites", s.handelSaveFavoriteUsers)
+	s.router.GET("/favorites/:userID", s.handelGetFavoriteUsers)
+	s.router.DELETE("/favorites/:userID/:favoriteID", s.handelDeleteFavoriteUsers)
 
 	// Routes for admin user only
 	s.router.Use(middleware.AdminOnly())
@@ -143,21 +144,19 @@ func (s *Serve) handelLogin(c *gin.Context) {
 // * * * RANTING * * *
 
 func (s *Serve) handelGetRatingsUsers(c *gin.Context) {
-	var ranting *models.Rating
-	var err error
-	if ranting.UserId, err = s.getUserID(c); err == nil {
-		err := s.db.GetRatingByUser(ranting)
+	if userId, err := s.getUserID(c); err == nil {
+		result, err := s.db.GetRatingByUser(userId)
 		if err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, ranting)
+		c.JSON(http.StatusOK, result)
 	}
 }
 
 func (s *Serve) handelSaveRatingsUsers(c *gin.Context) {
 
-	if ranting := s.decodeRantingJSON(c); ranting != nil {
+	if ranting := s.decodeRatingJSON(c); ranting != nil {
 		err := s.db.SaveRating(ranting)
 		if err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
@@ -166,23 +165,23 @@ func (s *Serve) handelSaveRatingsUsers(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "ranting saved"})
 	}
 }
-func (s *Serve) decodeRantingJSON(c *gin.Context) *models.Rating {
-	var ranting models.Rating
-	err := c.ShouldBindJSON(&ranting)
+func (s *Serve) decodeRatingJSON(c *gin.Context) *models.Rating {
+	var rating models.Rating
+	err := c.ShouldBindJSON(&rating)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return nil
 	}
-	return &ranting
+	return &rating
 }
 
 // * * * FAVORITE * * *
 
 func (s *Serve) handelGetFavoriteUsers(c *gin.Context) {
-	var favorite *models.Favorite
+	var favorite models.Favorite
 	var err error
 	if favorite.UserId, err = s.getUserID(c); err == nil {
-		err := s.db.GetFavoriteByUser(favorite)
+		err := s.db.GetFavoriteByUser(&favorite)
 		if err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
@@ -194,13 +193,51 @@ func (s *Serve) handelGetFavoriteUsers(c *gin.Context) {
 func (s *Serve) handelSaveFavoriteUsers(c *gin.Context) {
 
 	if favorite := s.decodeFavoriteJSON(c); favorite != nil {
-		err := s.db.SaveFavorite(favorite)
+		newFavor := favorite.MoviesID
+		err := s.db.GetFavoriteByUser(favorite)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+		// delete if exist
+		favorite.MoviesID = strings.Replace(favorite.MoviesID, fmt.Sprintf("#%s|", newFavor), "", -1)
+
+		// add new
+		favorite.MoviesID += fmt.Sprintf("#%s|", newFavor)
+
+		err = s.db.SaveFavorite(favorite)
 		if err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
 		}
 		c.JSON(http.StatusOK, gin.H{"message": "favorite saved"})
 	}
+}
+
+func (s *Serve) handelDeleteFavoriteUsers(c *gin.Context) {
+	userId, err := s.getUserID(c)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+	}
+	favoriteId := s.getFavoritesID(c)
+
+	var favorite models.Favorite
+	favorite.UserId = userId
+	err = s.db.GetFavoriteByUser(&favorite)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+	// delete
+	favorite.MoviesID = strings.Replace(favorite.MoviesID, fmt.Sprintf("#%s|", favoriteId), "", -1)
+
+	err = s.db.SaveFavorite(&favorite)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "favorite deleted"})
+
 }
 
 func (s *Serve) decodeFavoriteJSON(c *gin.Context) *models.Favorite {
@@ -225,12 +262,15 @@ func (s *Serve) decodeUserJSON(c *gin.Context) *models.User {
 	return &user
 }
 func (s *Serve) getUserID(c *gin.Context) (int, error) {
-	movieID, err := strconv.Atoi(c.Param("userID"))
+	id, err := strconv.Atoi(c.Param("userID"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
 		return 0, err
 	}
-	return movieID, nil
+	return id, nil
+}
+func (s *Serve) getFavoritesID(c *gin.Context) string {
+	return c.Param("favoriteID")
 }
 
 // * * * MOVIE * * *

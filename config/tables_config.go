@@ -34,7 +34,7 @@ const CREATE_TABLE_FAVORITE = `
 `
 const CREATE_TABLE_RATING = `
 CREATE TABLE IF NOT EXISTS rating (
-	moviesid INTEGER PRIMARY KEY ,
+	movieid INTEGER PRIMARY KEY ,
 	stars INTEGER,
 	userid INTEGER
 );

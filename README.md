@@ -52,19 +52,9 @@ Goflix est une API en Go inspirée par Netflix, conçue pour fournir des fonctio
 
 -**Système de recommandations :**
     
-    - GET /recommendations/{userID} : Obtenir des recommandations pour un utilisateur spécifique.
-    
     - POST /ratings : Ajouter une évaluation d'utilisateur pour un film ou une série.
     
     - GET /ratings/{userID} : Obtenir les évaluations d'un utilisateur spécifique.
-
--**Recherche avancée :**
-    
-    - GET /search?query={term} : Rechercher du contenu en fonction d'un terme spécifique.
-    
-    - GET /search?genre={genreName} : Rechercher du contenu par genre.
-    
-    - GET /search?actor={actorName} : Rechercher du contenu par acteur.
 
 -**Gestion des favoris :**
     
