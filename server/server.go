@@ -44,11 +44,14 @@ func (s *Serve) routes() {
 	s.router.DELETE("/users/:userID", s.handelDeleteUsers)
 	s.router.PUT("/users/:userID", s.handelUpdateUsers)
 
-	s.router.GET("/series/", s.handelGetListSeries)           //    - GET /series : Récupérer la liste des séries disponibles.
-	s.router.GET("/movies", s.handelGetListMovies)            //	  - GET /movies : Récupérer la liste des films disponibles.
-	s.router.GET("/movies/:movieID", s.handelGetmovie)        //    - GET /movies/{movieID} : Obtenir les détails d'un film spécifique.
-	s.router.POST("/movies/", s.handelAddMovies)              //    - POST /movies : Ajouter un nouveau film au catalogue.
-	s.router.DELETE("/movies/:movieID", s.handelDeleteMovies) //    - DELETE /movies/{movieID} : Supprimer un film du catalogue.
+	s.router.GET("/series/", s.handelGetListSeries)
+	s.router.GET("/movies", s.handelGetListMovies)
+	s.router.GET("/movies/:movieID", s.handelGetmovie)
+
+	s.router.Use(middleware.AdminOnly())
+
+	s.router.POST("/movies/", s.handelAddMovies)
+	s.router.DELETE("/movies/:movieID", s.handelDeleteMovies)
 
 }
 
@@ -112,7 +115,12 @@ func (s *Serve) handelLogin(c *gin.Context) {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
 		}
-		token, err := middleware.GenerateToken(user.Id)
+		user, err := s.db.GetUser(user.Id)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+		token, err := middleware.GenerateToken(user.Id, user.Account)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
