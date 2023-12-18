@@ -36,7 +36,7 @@ func (s *Serve) routes() {
 
 	s.router.GET("/", s.handelHello)
 	s.router.POST("/login", s.handelLogin)
-	s.router.POST("/users", s.handelSaveUsers)
+	s.router.POST("/users", s.handelAddUsers)
 
 	s.router.Use(middleware.JwtMiddleware())
 
@@ -44,13 +44,21 @@ func (s *Serve) routes() {
 	s.router.DELETE("/users/:userID", s.handelDeleteUsers)
 	s.router.PUT("/users/:userID", s.handelUpdateUsers)
 
+	s.router.GET("/series/", s.handelGetListSeries)           //    - GET /series : Récupérer la liste des séries disponibles.
+	s.router.GET("/movies", s.handelGetListMovies)            //	  - GET /movies : Récupérer la liste des films disponibles.
+	s.router.GET("/movies/:movieID", s.handelGetmovie)        //    - GET /movies/{movieID} : Obtenir les détails d'un film spécifique.
+	s.router.POST("/movies/", s.handelAddMovies)              //    - POST /movies : Ajouter un nouveau film au catalogue.
+	s.router.DELETE("/movies/:movieID", s.handelDeleteMovies) //    - DELETE /movies/{movieID} : Supprimer un film du catalogue.
+
 }
 
 func (s *Serve) handelHello(c *gin.Context) {
 	c.String(200, "Hello Goflix")
 }
 
-func (s *Serve) handelSaveUsers(c *gin.Context) {
+// * * *  USER * * *
+
+func (s *Serve) handelAddUsers(c *gin.Context) {
 	if user := s.decodeUserJSON(c); user != nil {
 		err := s.db.SaveUser(user)
 		if err != nil {
@@ -95,7 +103,6 @@ func (s *Serve) handelUpdateUsers(c *gin.Context) {
 		}
 		c.JSON(http.StatusOK, gin.H{"message": "user updated"})
 	}
-
 }
 
 func (s *Serve) handelLogin(c *gin.Context) {
@@ -113,7 +120,6 @@ func (s *Serve) handelLogin(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{"token": token})
 		}
 	}
-
 }
 
 // * * * *
@@ -128,6 +134,51 @@ func (s *Serve) decodeUserJSON(c *gin.Context) *models.User {
 	return &user
 }
 func (s *Serve) getUserID(c *gin.Context) (int, error) {
+	movieID, err := strconv.Atoi(c.Param("userID"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return 0, err
+	}
+	return movieID, nil
+}
+
+// * * * MOVIE * * *
+
+func (s *Serve) handelGetListSeries(c *gin.Context) {
+	if user := s.decodeUserJSON(c); user != nil {
+		err := s.db.SaveUser(user)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"message": "user saved"})
+	}
+}
+func (s *Serve) handelGetListMovies(c *gin.Context) {
+
+}
+func (s *Serve) handelGetmovie(c *gin.Context) {
+
+}
+func (s *Serve) handelAddMovies(c *gin.Context) {
+
+}
+func (s *Serve) handelDeleteMovies(c *gin.Context) {
+
+}
+
+// * * * *
+
+func (s *Serve) decodeMovieJSON(c *gin.Context) *models.User {
+	var user models.User
+	err := c.ShouldBindJSON(&user)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return nil
+	}
+	return &user
+}
+func (s *Serve) getMovieID(c *gin.Context) (int, error) {
 	movieID, err := strconv.Atoi(c.Param("userID"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
