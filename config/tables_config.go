@@ -17,7 +17,7 @@ const CREATE_TABLE_USERS = `
 const CREATE_TABLE_MOVIES = `
 		CREATE TABLE IF NOT EXISTS movies (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			title TEXT UNIQUE,
+			title TEXT,
 			actors TEXT ,
 			rating INTEGER,
 			details TEXT,
@@ -26,3 +26,16 @@ const CREATE_TABLE_MOVIES = `
             episode INTEGER
 		);
 	`
+const CREATE_TABLE_FAVORITE = `
+	CREATE TABLE IF NOT EXISTS favorite (
+		userid INTEGER PRIMARY KEY ,
+		moviesid TEXT
+	);
+`
+const CREATE_TABLE_RATING = `
+CREATE TABLE IF NOT EXISTS rating (
+	moviesid INTEGER PRIMARY KEY ,
+	stars INTEGER,
+	userid INTEGER
+);
+`

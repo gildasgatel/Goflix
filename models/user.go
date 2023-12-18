@@ -15,3 +15,14 @@ type Info struct {
 	Cell      int    `json:"cell"`
 	Adress    string `json:"adress"`
 }
+
+type Favorite struct {
+	UserId   int    `json:"userid"`
+	MoviesID string `json:"moviesid"`
+}
+
+type Rating struct {
+	MovieId int `json:"movieid"`
+	Stars   int `json:"stars"`
+	UserId  int `json:"userid"`
+}

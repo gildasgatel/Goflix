@@ -38,6 +38,7 @@ func (s *Serve) routes() {
 	s.router.POST("/login", s.handelLogin)
 	s.router.POST("/users", s.handelAddUsers)
 
+	// Routes for connected user
 	s.router.Use(middleware.JwtMiddleware())
 
 	s.router.GET("/users/:userID", s.handelGetUsers)
@@ -48,6 +49,15 @@ func (s *Serve) routes() {
 	s.router.GET("/movies", s.handelGetListMovies)
 	s.router.GET("/movies/:movieID", s.handelGetmovie)
 
+	s.router.GET("/recommendations/:userID", s.handelSaveRatingsUsers) //todo
+	s.router.POST("/ratings", s.handelSaveRatingsUsers)
+	s.router.GET("/ratings/:userID", s.handelGetRatingsUsers)
+
+	s.router.POST("/users/:userID/favorites", s.handelSaveFavoriteUsers)
+	s.router.GET("/users/:userID/favorites", s.handelGetFavoriteUsers)
+	s.router.DELETE("/users/:userID/favorites/:favoriteID", s.handelGetRatingsUsers) //todo
+
+	// Routes for admin user only
 	s.router.Use(middleware.AdminOnly())
 
 	s.router.POST("/movies/", s.handelAddMovies)
@@ -128,6 +138,79 @@ func (s *Serve) handelLogin(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{"token": token})
 		}
 	}
+}
+
+// * * * RANTING * * *
+
+func (s *Serve) handelGetRatingsUsers(c *gin.Context) {
+	var ranting *models.Rating
+	var err error
+	if ranting.UserId, err = s.getUserID(c); err == nil {
+		err := s.db.GetRatingByUser(ranting)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, ranting)
+	}
+}
+
+func (s *Serve) handelSaveRatingsUsers(c *gin.Context) {
+
+	if ranting := s.decodeRantingJSON(c); ranting != nil {
+		err := s.db.SaveRating(ranting)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"message": "ranting saved"})
+	}
+}
+func (s *Serve) decodeRantingJSON(c *gin.Context) *models.Rating {
+	var ranting models.Rating
+	err := c.ShouldBindJSON(&ranting)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return nil
+	}
+	return &ranting
+}
+
+// * * * FAVORITE * * *
+
+func (s *Serve) handelGetFavoriteUsers(c *gin.Context) {
+	var favorite *models.Favorite
+	var err error
+	if favorite.UserId, err = s.getUserID(c); err == nil {
+		err := s.db.GetFavoriteByUser(favorite)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, favorite)
+	}
+}
+
+func (s *Serve) handelSaveFavoriteUsers(c *gin.Context) {
+
+	if favorite := s.decodeFavoriteJSON(c); favorite != nil {
+		err := s.db.SaveFavorite(favorite)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"message": "favorite saved"})
+	}
+}
+
+func (s *Serve) decodeFavoriteJSON(c *gin.Context) *models.Favorite {
+	var favorite models.Favorite
+	err := c.ShouldBindJSON(&favorite)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return nil
+	}
+	return &favorite
 }
 
 // * * * *

@@ -67,7 +67,7 @@ func AdminOnly() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		user, err := ExtractUserData(tokenString)
+		user, err := extractUserData(tokenString)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Data token invalide"})
 			c.Abort()
@@ -82,7 +82,7 @@ func AdminOnly() gin.HandlerFunc {
 	}
 }
 
-func ExtractUserData(tokenString string) (*models.User, error) {
+func extractUserData(tokenString string) (*models.User, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		return secretKey, nil
 	})

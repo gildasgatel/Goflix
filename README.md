@@ -68,9 +68,9 @@ Goflix est une API en Go inspirée par Netflix, conçue pour fournir des fonctio
 
 -**Gestion des favoris :**
     
-    - POST /users/{userID}/favorites : Ajouter un élément aux favoris d'un utilisateur.
+    - POST /favorites : Ajouter un élément aux favoris d'un utilisateur.
     
-    - GET /users/{userID}/favorites : Obtenir la liste des éléments favoris d'un utilisateur.
+    - GET /favorites/{userID} : Obtenir la liste des éléments favoris d'un utilisateur.
     
     - DELETE /users/{userID}/favorites/{favoriteID} : Supprimer un élément des favoris d'un utilisateur.
 

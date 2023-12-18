@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 
 	"goflix/config"
 	"goflix/models"
@@ -25,6 +26,10 @@ type Storage interface {
 	DeleteMovieByID(id int) error
 	GetSeries() ([]*models.Movies, error)
 	AddMovie(movie *models.Movies) error
+	SaveRating(rating *models.Rating) error
+	GetFavoriteByUser(favorite *models.Favorite) error
+	SaveFavorite(favorite *models.Favorite) error
+	GetRatingByUser(rating *models.Rating) error
 }
 
 type DbSqlite struct {
@@ -66,6 +71,17 @@ func (db *DbSqlite) InitTables() error {
 		return err
 	}
 	fmt.Println("movies created!")
+	_, err = db.sqlite.Exec(config.CREATE_TABLE_FAVORITE)
+	if err != nil {
+		return err
+	}
+	fmt.Println("favorite created!")
+
+	_, err = db.sqlite.Exec(config.CREATE_TABLE_RATING)
+	if err != nil {
+		return err
+	}
+	fmt.Println("rating created!")
 
 	return nil
 }
@@ -295,5 +311,79 @@ func (db *DbSqlite) AddMovie(movie *models.Movies) error {
 		return err
 	}
 
+	return nil
+}
+
+func (db *DbSqlite) SaveFavorite(favorite *models.Favorite) error {
+
+	updateSQL := "UPDATE favorite SET moviesid = ? WHERE userid = ?"
+	res, err := db.sqlite.Exec(updateSQL, favorite.MoviesID, favorite.UserId)
+	if err != nil {
+		return err
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if n > 0 {
+		log.Println("favorite updated")
+		return nil
+	}
+	insertSQL := "INSERT INTO favorite (userid, moviesid) VALUES (?, ?)"
+	_, err = db.sqlite.Exec(insertSQL, favorite.UserId, favorite.MoviesID)
+	if err != nil {
+		return err
+	}
+	log.Println("favorite add")
+	return nil
+}
+func (db *DbSqlite) GetFavoriteByUser(favorite *models.Favorite) error {
+	rows, err := db.sqlite.Query("SELECT * FROM favorite WHERE userid = ?", favorite.UserId)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	if rows.Next() {
+		err = rows.Scan(favorite.UserId, favorite.MoviesID)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (db *DbSqlite) SaveRating(rating *models.Rating) error {
+	updateSQL := "UPDATE rating SET stars = ? WHERE movieid = ? AND userid = ?"
+	res, err := db.sqlite.Exec(updateSQL, rating.Stars, rating.MovieId, rating.UserId)
+	if err != nil {
+		return err
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if n > 0 {
+		log.Println("rating updated")
+		return nil
+	}
+	insertSQL := "INSERT INTO rating (moviesid, stars, userid) VALUES (?, ?, ?)"
+	_, err = db.sqlite.Exec(insertSQL, rating.MovieId, rating.Stars, rating.UserId)
+	if err != nil {
+		return err
+	}
+	log.Println("rating add")
+	return nil
+}
+func (db *DbSqlite) GetRatingByUser(rating *models.Rating) error {
+	rows, err := db.sqlite.Query("SELECT * FROM rating WHERE moviesid = ? AND userid = ?", rating.MovieId, rating.UserId)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	if rows.Next() {
+		err = rows.Scan(rating.UserId, rating.MovieId, rating.Stars)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
