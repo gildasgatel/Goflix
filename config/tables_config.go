@@ -13,3 +13,16 @@ const CREATE_TABLE_USERS = `
 			adress TEXT
 		);
 	`
+
+const CREATE_TABLE_MOVIES = `
+		CREATE TABLE IF NOT EXISTS movies (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			title TEXT UNIQUE,
+			actors TEXT ,
+			rating INTEGER,
+			details TEXT,
+			genre TEXT,
+			saison INTEGER,
+            episode INTEGER
+		);
+	`

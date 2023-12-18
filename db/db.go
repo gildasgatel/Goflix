@@ -20,6 +20,11 @@ type Storage interface {
 	DeleteUser(int) error
 	UpdateUser(*models.User) error
 	GetID(user *models.User) error
+	GetMoviesById(id int) (*models.Movies, error)
+	GetMovies() ([]*models.Movies, error)
+	DeleteMovieByID(id int) error
+	GetSeries() ([]*models.Movies, error)
+	AddMovie(movie *models.Movies) error
 }
 
 type DbSqlite struct {
@@ -40,11 +45,27 @@ func (db *DbSqlite) Setup() error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("Database connected!")
-	_, err = db.sqlite.Exec(config.CREATE_TABLE_USERS)
+
+	err = db.InitTables()
 	if err != nil {
 		return err
 	}
+	fmt.Println("Database connected!")
+
+	return nil
+}
+
+func (db *DbSqlite) InitTables() error {
+	_, err := db.sqlite.Exec(config.CREATE_TABLE_USERS)
+	if err != nil {
+		return err
+	}
+	fmt.Println("user created!")
+	_, err = db.sqlite.Exec(config.CREATE_TABLE_MOVIES)
+	if err != nil {
+		return err
+	}
+	fmt.Println("movies created!")
 
 	return nil
 }
@@ -164,6 +185,114 @@ func (db *DbSqlite) DeleteUser(id int) error {
 	}
 	if rowsAffected != 1 {
 		return fmt.Errorf("errors want delete 1 reccord got: %d", rowsAffected)
+	}
+
+	return nil
+}
+
+// * * *
+
+func (db *DbSqlite) GetMoviesById(id int) (*models.Movies, error) {
+	rows, err := db.sqlite.Query("SELECT * FROM movies  WHERE id=?", id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var movie models.Movies
+	if rows.Next() {
+		err = rows.Scan(&movie.Id,
+			&movie.Title,
+			&movie.Actors,
+			&movie.Rating,
+			&movie.Details,
+			&movie.Genre,
+			&movie.Saison,
+			&movie.Episode)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if movie.Id == 0 {
+		return nil, errors.New("movie not found")
+	}
+	return &movie, nil
+}
+func (db *DbSqlite) GetMovies() ([]*models.Movies, error) {
+	rows, err := db.sqlite.Query("SELECT * FROM movies WHERE saison = 0 ")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var movies []*models.Movies
+	for rows.Next() {
+		movie := models.Movies{}
+		err = rows.Scan(&movie.Id,
+			&movie.Title,
+			&movie.Actors,
+			&movie.Rating,
+			&movie.Details,
+			&movie.Genre,
+			&movie.Saison,
+			&movie.Episode)
+		if err != nil {
+			return nil, err
+		}
+		movies = append(movies, &movie)
+	}
+	if len(movies) == 0 {
+		return nil, errors.New("movies not found")
+	}
+	return movies, nil
+}
+func (db *DbSqlite) DeleteMovieByID(id int) error {
+	deleteSQL := "DELETE FROM movies WHERE id = ?"
+	result, err := db.sqlite.Exec(deleteSQL, id)
+	if err != nil {
+		return err
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected != 1 {
+		return fmt.Errorf("errors want delete 1 reccord got: %d", rowsAffected)
+	}
+
+	return nil
+}
+func (db *DbSqlite) GetSeries() ([]*models.Movies, error) {
+	rows, err := db.sqlite.Query("SELECT * FROM movies WHERE saison > 0 ")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var series []*models.Movies
+	for rows.Next() {
+		serie := models.Movies{}
+		err = rows.Scan(&serie.Id,
+			&serie.Title,
+			&serie.Actors,
+			&serie.Rating,
+			&serie.Details,
+			&serie.Genre,
+			&serie.Saison,
+			&serie.Episode)
+		if err != nil {
+			return nil, err
+		}
+		series = append(series, &serie)
+	}
+	if len(series) == 0 {
+		return nil, errors.New("series not found")
+	}
+	return series, nil
+}
+func (db *DbSqlite) AddMovie(movie *models.Movies) error {
+	insertSQL := "INSERT INTO movies (title, actors, rating, details, genre, saison, episode) VALUES (?, ?, ?, ?, ?, ?, ?)"
+	_, err := db.sqlite.Exec(insertSQL,
+		movie.Title, movie.Actors, movie.Rating, movie.Details, movie.Genre, movie.Saison, movie.Episode)
+	if err != nil {
+		return err
 	}
 
 	return nil

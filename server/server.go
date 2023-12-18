@@ -62,7 +62,7 @@ func (s *Serve) handelAddUsers(c *gin.Context) {
 	if user := s.decodeUserJSON(c); user != nil {
 		err := s.db.SaveUser(user)
 		if err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 		c.JSON(http.StatusOK, gin.H{"message": "user saved"})
@@ -145,43 +145,67 @@ func (s *Serve) getUserID(c *gin.Context) (int, error) {
 // * * * MOVIE * * *
 
 func (s *Serve) handelGetListSeries(c *gin.Context) {
-	if user := s.decodeUserJSON(c); user != nil {
-		err := s.db.SaveUser(user)
+	series, err := s.db.GetSeries()
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"series": series})
+}
+func (s *Serve) handelGetListMovies(c *gin.Context) {
+	movies, err := s.db.GetMovies()
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"movie": movies})
+}
+func (s *Serve) handelGetmovie(c *gin.Context) {
+	if id, err := s.getMovieID(c); err == nil {
+		user, err := s.db.GetMoviesById(id)
 		if err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{"message": "user saved"})
+		c.JSON(http.StatusOK, user)
 	}
 }
-func (s *Serve) handelGetListMovies(c *gin.Context) {
-
-}
-func (s *Serve) handelGetmovie(c *gin.Context) {
-
-}
 func (s *Serve) handelAddMovies(c *gin.Context) {
-
+	if movie := s.decodeMovieJSON(c); movie != nil {
+		err := s.db.AddMovie(movie)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"message": "movie saved"})
+	}
 }
 func (s *Serve) handelDeleteMovies(c *gin.Context) {
-
+	if id, err := s.getMovieID(c); err == nil {
+		err := s.db.DeleteMovieByID(id)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"message": "movie deleted"})
+	}
 }
 
 // * * * *
 
-func (s *Serve) decodeMovieJSON(c *gin.Context) *models.User {
-	var user models.User
-	err := c.ShouldBindJSON(&user)
+func (s *Serve) decodeMovieJSON(c *gin.Context) *models.Movies {
+	var movie models.Movies
+	err := c.ShouldBindJSON(&movie)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return nil
 	}
-	return &user
+	return &movie
 }
 func (s *Serve) getMovieID(c *gin.Context) (int, error) {
-	movieID, err := strconv.Atoi(c.Param("userID"))
+	movieID, err := strconv.Atoi(c.Param("movieID"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid movie ID"})
 		return 0, err
 	}
 	return movieID, nil
