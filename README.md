@@ -46,9 +46,9 @@ Goflix est une API en Go inspirée par Netflix, conçue pour fournir des fonctio
     
     - GET /movies/{movieID} : Obtenir les détails d'un film spécifique.
     
-    - POST /movies : Ajouter un nouveau film au catalogue.
+    - POST /movies : Ajouter un nouveau film au catalogue. //admin seulement
     
-    - DELETE /movies/{movieID} : Supprimer un film du catalogue.
+    - DELETE /movies/{movieID} : Supprimer un film du catalogue. //admin seulement
 
 -**Système de recommandations :**
     
